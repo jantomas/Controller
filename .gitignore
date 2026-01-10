@@ -11,4 +11,4 @@
 /tests/**/bin
 /tests/**/obj
 /.vs/slnx.sqlite
-/src/Hexapod.Host/appsettings.Development.json
+/src/**/appsettings.Development.json
