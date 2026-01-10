@@ -1,0 +1,14 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/HexapodController/copilot-chat
+/.vs/HexapodController/CopilotIndices
+/.vs/HexapodController/DesignTimeBuild
+/.vs/HexapodController/FileContentIndex
+/src/**/bin
+/src/**/obj
+/tests/**/bin
+/tests/**/obj
+/.vs/slnx.sqlite
+/src/Hexapod.Host/appsettings.Development.json

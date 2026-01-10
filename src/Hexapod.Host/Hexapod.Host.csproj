@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Hexapod.Host</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hexapod.Core\Hexapod.Core.csproj" />
+    <ProjectReference Include="..\Hexapod.Movement\Hexapod.Movement.csproj" />
+    <ProjectReference Include="..\Hexapod.Sensors\Hexapod.Sensors.csproj" />
+    <ProjectReference Include="..\Hexapod.Vision\Hexapod.Vision.csproj" />
+    <ProjectReference Include="..\Hexapod.Communication\Hexapod.Communication.csproj" />
+    <ProjectReference Include="..\Hexapod.Autonomy\Hexapod.Autonomy.csproj" />
+    <ProjectReference Include="..\Hexapod.Telemetry\Hexapod.Telemetry.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
+    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>
