@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Core Launch (ServoTest)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Hexapod.ServoTest/bin/Debug/net8.0/Hexapod.ServoTest.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Hexapod.ServoTest",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": ".NET Core Launch (GaitTest)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Hexapod.GaitTest/bin/Debug/net8.0/Hexapod.GaitTest.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Hexapod.GaitTest",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": ".NET Core Launch (Host)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Hexapod.Host/bin/Debug/net8.0/Hexapod.Host.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Hexapod.Host",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  ]
+}

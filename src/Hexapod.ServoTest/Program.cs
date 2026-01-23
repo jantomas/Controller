@@ -14,9 +14,14 @@ AnsiConsole.MarkupLine("[grey]Interactive tool for verifying servo wiring and ch
 AnsiConsole.WriteLine();
 
 // Load configuration
+var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") 
+                  ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") 
+                  ?? "Production";
+AnsiConsole.MarkupLine($"[grey]Environment: {environment}[/]");                 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true)
     .Build();
 
 // Setup DI
@@ -27,6 +32,8 @@ services.AddLogging(builder => builder.AddConsole().SetMinimumLevel(LogLevel.War
 var serviceProvider = services.BuildServiceProvider();
 var config = serviceProvider.GetRequiredService<IOptions<HexapodConfiguration>>();
 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+
+AnsiConsole.MarkupLine($"[grey]Port: {config.Value.Hardware.MaestroServo.SerialPort}[/]");                 
 
 // Create servo controller
 PololuMaestroServoController? controller = null;
