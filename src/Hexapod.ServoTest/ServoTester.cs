@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Hexapod.Core.Configuration;
 using Hexapod.Movement.Servo;
 using Spectre.Console;
