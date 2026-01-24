@@ -17,9 +17,10 @@ const double TibiaMaxRad = 5 * Math.PI / 6;  // 150°
 
 static Vector3 ForwardKinematics(double coxa, double femur, double tibia)
 {
-    // tibia angle is the interior angle, convert to relative angle from femur
+    // tibia is stored as interior angle; convert to relative angle from femur
     var tibiaRelative = tibia - Math.PI;
     
+    // Span from coxa joint to foot
     var legLength = CoxaLength + 
                    FemurLength * Math.Cos(femur) + 
                    TibiaLength * Math.Cos(femur + tibiaRelative);
@@ -27,9 +28,12 @@ static Vector3 ForwardKinematics(double coxa, double femur, double tibia)
     var z = FemurLength * Math.Sin(femur) + 
             TibiaLength * Math.Sin(femur + tibiaRelative);
 
+    // World coordinates: mount point + rotated leg vector
     var totalAngle = MountAngle + coxa;
-    var x = (BodyRadius + legLength) * Math.Cos(totalAngle);
-    var y = (BodyRadius + legLength) * Math.Sin(totalAngle);
+    var mountX = BodyRadius * Math.Cos(MountAngle);
+    var mountY = BodyRadius * Math.Sin(MountAngle);
+    var x = mountX + legLength * Math.Cos(totalAngle);
+    var y = mountY + legLength * Math.Sin(totalAngle);
 
     return new Vector3((float)x, (float)y, (float)z);
 }

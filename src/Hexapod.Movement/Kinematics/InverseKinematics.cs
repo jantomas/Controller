@@ -76,21 +76,23 @@ public class HexapodLeg
     /// </summary>
     public Vector3 ForwardKinematics(double coxa, double femur, double tibia)
     {
-        // tibia angle is the interior angle, convert to relative angle from femur
+        // tibia is stored as interior angle; convert to relative angle from femur
         var tibiaRelative = tibia - Math.PI;
         
-        // Calculate position relative to coxa joint
-        var legLength = CoxaLength + 
-                       FemurLength * Math.Cos(femur) + 
-                       TibiaLength * Math.Cos(femur + tibiaRelative);
-        
-        var z = FemurLength * Math.Sin(femur) + 
-                TibiaLength * Math.Sin(femur + tibiaRelative);
+        // Calculate leg span from coxa joint
+        var legLength = CoxaLength +
+                   FemurLength * Math.Cos(femur) +
+                   TibiaLength * Math.Cos(femur + tibiaRelative);
 
-        // Rotate by coxa angle and mount angle
+        var z = FemurLength * Math.Sin(femur) +
+            TibiaLength * Math.Sin(femur + tibiaRelative);
+
+        // World position = mount point + rotated leg vector
         var totalAngle = MountAngle + coxa;
-        var x = (MountRadius + legLength) * Math.Cos(totalAngle);
-        var y = (MountRadius + legLength) * Math.Sin(totalAngle);
+        var mountX = MountRadius * Math.Cos(MountAngle);
+        var mountY = MountRadius * Math.Sin(MountAngle);
+        var x = mountX + legLength * Math.Cos(totalAngle);
+        var y = mountY + legLength * Math.Sin(totalAngle);
 
         return new Vector3((float)x, (float)y, (float)z);
     }
