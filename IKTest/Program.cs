@@ -17,15 +17,15 @@ const double TibiaMaxRad = 5 * Math.PI / 6;  // 150°
 
 static Vector3 ForwardKinematics(double coxa, double femur, double tibia)
 {
-    // tibia is stored as interior angle; convert to relative angle from femur
-    var tibiaRelative = tibia - Math.PI;
+    // tibia angle stored as servo-friendly (0 = straight); relative from femur is negative of tibia
+    var tibiaRelative = -tibia;
     
     // Span from coxa joint to foot
-    var legLength = CoxaLength + 
-                   FemurLength * Math.Cos(femur) + 
+    var legLength = CoxaLength +
+                   FemurLength * Math.Cos(femur) +
                    TibiaLength * Math.Cos(femur + tibiaRelative);
     
-    var z = FemurLength * Math.Sin(femur) + 
+    var z = FemurLength * Math.Sin(femur) +
             TibiaLength * Math.Sin(femur + tibiaRelative);
 
     // World coordinates: mount point + rotated leg vector

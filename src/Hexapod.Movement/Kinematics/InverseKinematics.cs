@@ -76,8 +76,9 @@ public class HexapodLeg
     /// </summary>
     public Vector3 ForwardKinematics(double coxa, double femur, double tibia)
     {
-        // tibia is stored as interior angle; convert to relative angle from femur
-        var tibiaRelative = tibia - Math.PI;
+        // tibia is stored as servo-friendly angle (0=straight, increases when folding)
+        // Relative tibia angle from femur direction (0 keeps alignment, positive folds inward)
+        var tibiaRelative = -tibia;
         
         // Calculate leg span from coxa joint
         var legLength = CoxaLength +
