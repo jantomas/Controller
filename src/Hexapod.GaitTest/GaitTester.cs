@@ -1584,4 +1584,90 @@ public class GaitTester
         var color = value >= 0.8 ? "green" : value >= 0.6 ? "yellow" : "red";
         return $"[{color}]{new string('█', bars)}{new string('░', 5 - bars)}[/] {value:P0}";
     }
+
+    /// <summary>
+    /// Verify inverse kinematics calculations with predefined sample positions.
+    /// Tests both IK correctness and FK round-trip verification.
+    /// </summary>
+    public void VerifyInverseKinematicsCalculations()
+    {
+        AnsiConsole.MarkupLine("[bold cyan]Testing Inverse Kinematics with Sample Positions[/]\n");
+        
+        // Test Front Right leg (Leg 0)
+        var leg = _body.Legs[0];
+        
+        AnsiConsole.MarkupLine($"[yellow]Testing: {leg.Name} (Leg {leg.LegId})[/]");
+        AnsiConsole.MarkupLine($"[grey]Configuration: Coxa={leg.CoxaLength * 1000:F1}mm, Femur={leg.FemurLength * 1000:F1}mm, Tibia={leg.TibiaLength * 1000:F1}mm[/]");
+        AnsiConsole.MarkupLine($"[grey]Mount: Radius={leg.MountRadius * 1000:F1}mm, Angle={ToDegrees(leg.MountAngle):F1}°[/]\n");
+
+        // Sample positions (in mm, convert to meters)
+        var testPositions = new[]
+        {
+            (Name: "Basic position", X: 180.0, Y: 180.0, Z: -45.0),
+            (Name: "Max reach", X: 220.0, Y: 220.0, Z: -20.0),
+            (Name: "Close position", X: 130.0, Y: 130.0, Z: -80.0),
+            (Name: "Lifted foot", X: 170.0, Y: 170.0, Z: 30.0),
+            (Name: "Rest position", X: 165.0, Y: 165.0, Z: -60.0)
+        };
+
+        var table = new Table()
+            .Border(TableBorder.Rounded)
+            .AddColumn("Test")
+            .AddColumn("Target (mm)")
+            .AddColumn("Result")
+            .AddColumn("Coxa (°)")
+            .AddColumn("Femur (°)")
+            .AddColumn("Tibia (°)")
+            .AddColumn("FK Check (mm)")
+            .AddColumn("Error (mm)");
+
+        foreach (var test in testPositions)
+        {
+            // Convert to meters
+            var target = new Vector3((float)(test.X / 1000.0), (float)(test.Y / 1000.0), (float)(test.Z / 1000.0));
+            
+            // Run IK
+            var result = leg.InverseKinematics(target);
+
+            if (result.HasValue)
+            {
+                // Verify with forward kinematics
+                var fkPosition = leg.ForwardKinematics(result.Value.Coxa, result.Value.Femur, result.Value.Tibia);
+                
+                // Calculate error
+                var error = Vector3.Distance(target, fkPosition) * 1000.0; // in mm
+
+                var errorColor = error < 0.1 ? "green" : error < 1.0 ? "yellow" : "red";
+                
+                table.AddRow(
+                    test.Name,
+                    $"({test.X:F1}, {test.Y:F1}, {test.Z:F1})",
+                    "[green]✓ Valid[/]",
+                    $"{ToDegrees(result.Value.Coxa):F2}",
+                    $"{ToDegrees(result.Value.Femur):F2}",
+                    $"{ToDegrees(result.Value.Tibia):F2}",
+                    $"({fkPosition.X * 1000:F1}, {fkPosition.Y * 1000:F1}, {fkPosition.Z * 1000:F1})",
+                    $"[{errorColor}]{error:F3}[/]"
+                );
+            }
+            else
+            {
+                table.AddRow(
+                    test.Name,
+                    $"({test.X:F1}, {test.Y:F1}, {test.Z:F1})",
+                    "[red]✗ Unreachable[/]",
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                    "-"
+                );
+            }
+        }
+
+        AnsiConsole.Write(table);
+        
+        AnsiConsole.MarkupLine("\n[grey]FK Check: Position calculated from joint angles using forward kinematics[/]");
+        AnsiConsole.MarkupLine("[grey]Error: Distance between target and FK result (should be < 0.1mm for accurate IK)[/]");
+    }
 }

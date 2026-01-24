@@ -8,6 +8,8 @@
 /.vs/HexapodController/FileContentIndex
 /src/**/bin
 /src/**/obj
+/IKTest/**/bin
+/IKTest/**/obj
 /tests/**/bin
 /tests/**/obj
 /.vs/slnx.sqlite
