@@ -1,0 +1,37 @@
+{
+	"version": "2.0.0",
+	"tasks": [		
+		{
+			"label": "build ServoTest",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/src/Hexapod.ServoTest/Hexapod.ServoTest.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary;ForceNoAlign"
+			],
+			"problemMatcher": "$msCompile",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+				{
+			"label": "build GaitTest",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/src/Hexapod.GaitTest/Hexapod.GaitTest.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary;ForceNoAlign"
+			],
+			"problemMatcher": "$msCompile",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
