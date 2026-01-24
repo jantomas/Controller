@@ -196,6 +196,17 @@ Edit `/opt/hexapod/appsettings.json`:
 }
 ```
 
+### Physical servo to logical channel mapping 
+
+Mapping structure (each row = one leg, 3 servos per leg):
+
+Front Right (Leg 0): Channels 0, 1, 2 → Coxa, Femur, Tibia
+Middle Right (Leg 1): Channels 3, 4, 5
+Rear Right (Leg 2): Channels 6, 7, 8
+Rear Left (Leg 3): Channels 9, 10, 11
+Middle Left (Leg 4): Channels 12, 13, 14
+Front Left (Leg 5): Channels 15, 16, 17
+
 #### Servo Controller Options
 
 | Controller | Config Value | Serial Port (Linux) | Serial Port (Windows) |
