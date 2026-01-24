@@ -81,6 +81,7 @@ while (true)
         "🔄 Run metachronal gait sample",
         "📊 Compare all gait patterns",
         "🎯 Test inverse kinematics",
+        "✅ Verify IK calculations",
         "📐 Test joint angle reachability",
         "📐 Show leg workspace",
         "📋 Show leg configuration",
@@ -134,6 +135,9 @@ while (true)
             break;
         case "🎯 Test inverse kinematics":
             tester.TestInverseKinematics();
+            break;
+        case "✅ Verify IK calculations":
+            tester.VerifyInverseKinematicsCalculations();
             break;
         case "📐 Test joint angle reachability":
             tester.TestJointAngleReachability();

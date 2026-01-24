@@ -33,7 +33,7 @@ public class HexapodLeg
     // Joint limits in radians
     public (double Min, double Max) CoxaLimits { get; } = (-Math.PI / 4, Math.PI / 4);
     public (double Min, double Max) FemurLimits { get; } = (-Math.PI / 3, Math.PI / 2);
-    public (double Min, double Max) TibiaLimits { get; } = (-Math.PI / 2, Math.PI / 6);
+    public (double Min, double Max) TibiaLimits { get; } = (Math.PI / 6, 5 * Math.PI / 6);
 
     public HexapodLeg(
         int legId,
@@ -76,13 +76,16 @@ public class HexapodLeg
     /// </summary>
     public Vector3 ForwardKinematics(double coxa, double femur, double tibia)
     {
+        // tibia angle is the interior angle, convert to relative angle from femur
+        var tibiaRelative = tibia - Math.PI;
+        
         // Calculate position relative to coxa joint
         var legLength = CoxaLength + 
                        FemurLength * Math.Cos(femur) + 
-                       TibiaLength * Math.Cos(femur + tibia);
+                       TibiaLength * Math.Cos(femur + tibiaRelative);
         
         var z = FemurLength * Math.Sin(femur) + 
-                TibiaLength * Math.Sin(femur + tibia);
+                TibiaLength * Math.Sin(femur + tibiaRelative);
 
         // Rotate by coxa angle and mount angle
         var totalAngle = MountAngle + coxa;
@@ -98,18 +101,20 @@ public class HexapodLeg
     /// </summary>
     public (double Coxa, double Femur, double Tibia)? InverseKinematics(Vector3 targetPosition)
     {
-        // Convert target to leg-local coordinates
+        // Transform target to mount point frame
         var dx = targetPosition.X - MountRadius * Math.Cos(MountAngle);
         var dy = targetPosition.Y - MountRadius * Math.Sin(MountAngle);
         var dz = targetPosition.Z;
 
-        // Calculate coxa angle (rotation in XY plane)
-        var coxa = Math.Atan2(dy, dx) - MountAngle;
+        // Calculate coxa angle (rotation in XY plane from mount direction)
+        var distanceToTarget = Math.Sqrt(dx * dx + dy * dy);
+        var angleToTarget = Math.Atan2(dy, dx);
+        var coxa = angleToTarget - MountAngle;
 
-        // Distance from coxa joint in horizontal plane
-        var horizontalDist = Math.Sqrt(dx * dx + dy * dy) - CoxaLength;
+        // Distance in horizontal plane after coxa rotation (from coxa joint)
+        var horizontalDist = distanceToTarget - CoxaLength;
         
-        // Distance from femur joint to target
+        // 3D distance from femur joint to target
         var L = Math.Sqrt(horizontalDist * horizontalDist + dz * dz);
 
         // Check if target is reachable
@@ -121,19 +126,22 @@ public class HexapodLeg
             return null; // Target unreachable
         }
 
-        // Law of cosines for tibia angle
+        // Law of cosines to find tibia interior angle
         var cosGamma = (FemurLength * FemurLength + TibiaLength * TibiaLength - L * L) / 
                        (2 * FemurLength * TibiaLength);
         cosGamma = Math.Clamp(cosGamma, -1.0, 1.0);
-        var tibia = Math.PI - Math.Acos(cosGamma);
+        var tibiaInterior = Math.Acos(cosGamma);  // Interior angle between femur and tibia
 
-        // Calculate femur angle
-        var alpha = Math.Atan2(dz, horizontalDist);
+        // Calculate femur angle (from horizontal)
+        var alpha = Math.Atan2(dz, horizontalDist);  // Angle to target from horizontal
         var cosBeta = (FemurLength * FemurLength + L * L - TibiaLength * TibiaLength) / 
                       (2 * FemurLength * L);
         cosBeta = Math.Clamp(cosBeta, -1.0, 1.0);
-        var beta = Math.Acos(cosBeta);
+        var beta = Math.Acos(cosBeta);  // Angle in triangle at femur joint
         var femur = alpha + beta;
+
+        // Convert tibia interior angle to our convention (0° = straight, 180° = fully bent)
+        var tibia = Math.PI - tibiaInterior;
 
         // Validate against joint limits
         if (!IsWithinLimits(coxa, CoxaLimits) ||
