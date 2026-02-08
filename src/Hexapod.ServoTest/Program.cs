@@ -20,7 +20,9 @@ var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
 AnsiConsole.MarkupLine($"[grey]Environment: {environment}[/]");                 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("hexapod.json", optional: false)
+    .AddJsonFile($"hexapod.{environment}.json", optional: true)
+    .AddJsonFile("appsettings.json", optional: true)
     .AddJsonFile($"appsettings.{environment}.json", optional: true)
     .Build();
 

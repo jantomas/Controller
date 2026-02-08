@@ -1,8 +1,13 @@
 using System.Numerics;
 using System.Text.Json;
+using Hexapod.Core.Configuration;
 using Hexapod.Movement.Kinematics;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Load shared hexapod.json + optional environment override before project-specific appsettings
+builder.Configuration.AddJsonFile("hexapod.json", optional: false, reloadOnChange: false);
+builder.Configuration.AddJsonFile($"hexapod.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
 
 builder.Services.AddCors();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
@@ -13,25 +18,16 @@ var app = builder.Build();
 app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 app.UseStaticFiles();
 
-// Load kinematics config from appsettings (values in mm, convert to meters for IK engine)
-var kinSection = app.Configuration.GetSection("Hexapod:Kinematics");
-var renderSection = app.Configuration.GetSection("Hexapod:Rendering");
+// Load strongly-typed kinematics and rendering config
+var kinConfig = new KinematicsConfiguration();
+app.Configuration.GetSection(KinematicsConfiguration.SectionName).Bind(kinConfig);
 
-double coxaMm = kinSection.GetValue<double>("CoxaLength", 40.0);
-double femurMm = kinSection.GetValue<double>("FemurLength", 60.0);
-double tibiaMm = kinSection.GetValue<double>("TibiaLength", 135.0);
-double bodyRadiusMm = kinSection.GetValue<double>("BodyRadius", 90.0);
-double defaultHeightMm = kinSection.GetValue<double>("DefaultHeight", 45.0);
+var renderConfig = new RenderingConfiguration();
+app.Configuration.GetSection(RenderingConfiguration.SectionName).Bind(renderConfig);
 
-// Rendering dimensions (mm)
-double bodyThicknessMm = renderSection.GetValue<double>("BodyThicknessMm", 12.0);
-double coxaDiameterMm = renderSection.GetValue<double>("CoxaDiameterMm", 10.0);
-double femurDiameterMm = renderSection.GetValue<double>("FemurDiameterMm", 8.0);
-double tibiaDiameterMm = renderSection.GetValue<double>("TibiaDiameterMm", 6.0);
-double jointDiameterMm = renderSection.GetValue<double>("JointDiameterMm", 12.0);
-double footDiameterMm = renderSection.GetValue<double>("FootDiameterMm", 8.0);
+var bodyConfig = kinConfig.Body;
 
-var body = new HexapodBody(coxaMm / 1000.0, femurMm / 1000.0, tibiaMm / 1000.0, bodyRadiusMm / 1000.0);
+var body = new HexapodBody(kinConfig);
 
 // --- API endpoints ---
 
@@ -56,17 +52,16 @@ app.MapGet("/api/config", () =>
     {
         Body = new
         {
-            RadiusMm = bodyRadiusMm,
-            ThicknessMm = bodyThicknessMm,
-            DefaultHeightMm = defaultHeightMm
+            ThicknessMm = bodyConfig.ThicknessMm,
+            DefaultHeightMm = kinConfig.DefaultHeight
         },
         Rendering = new
         {
-            CoxaDiameterMm = coxaDiameterMm,
-            FemurDiameterMm = femurDiameterMm,
-            TibiaDiameterMm = tibiaDiameterMm,
-            JointDiameterMm = jointDiameterMm,
-            FootDiameterMm = footDiameterMm
+            CoxaDiameterMm = renderConfig.CoxaDiameterMm,
+            FemurDiameterMm = renderConfig.FemurDiameterMm,
+            TibiaDiameterMm = renderConfig.TibiaDiameterMm,
+            JointDiameterMm = renderConfig.JointDiameterMm,
+            FootDiameterMm = renderConfig.FootDiameterMm
         },
         Legs = legs
     });

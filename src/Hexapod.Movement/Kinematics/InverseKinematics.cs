@@ -1,4 +1,5 @@
 using System.Numerics;
+using Hexapod.Core.Configuration;
 
 namespace Hexapod.Movement.Kinematics;
 
@@ -42,7 +43,10 @@ public class HexapodLeg
         double mountRadius,
         double coxaLength,
         double femurLength,
-        double tibiaLength)
+        double tibiaLength,
+        (double Min, double Max)? coxaLimits = null,
+        (double Min, double Max)? femurLimits = null,
+        (double Min, double Max)? tibiaLimits = null)
     {
         LegId = legId;
         Name = name;
@@ -51,6 +55,9 @@ public class HexapodLeg
         CoxaLength = coxaLength;
         FemurLength = femurLength;
         TibiaLength = tibiaLength;
+        if (coxaLimits.HasValue) CoxaLimits = coxaLimits.Value;
+        if (femurLimits.HasValue) FemurLimits = femurLimits.Value;
+        if (tibiaLimits.HasValue) TibiaLimits = tibiaLimits.Value;
     }
 
     /// <summary>
@@ -185,6 +192,39 @@ public class HexapodBody
     /// </summary>
     public Vector3 BodyRotation { get; private set; }
 
+    /// <summary>
+    /// Creates a HexapodBody from a KinematicsConfiguration with per-leg mount points and dimensions.
+    /// Supports irregular (elongated) hexagonal body shapes.
+    /// </summary>
+    public HexapodBody(KinematicsConfiguration config)
+    {
+        var limits = config.JointLimits;
+        var legs = new List<HexapodLeg>();
+
+        for (int i = 0; i < config.Legs.Count; i++)
+        {
+            var lc = config.Legs[i];
+            legs.Add(new HexapodLeg(
+                legId: i,
+                name: lc.Name,
+                mountAngle: lc.MountAngleDeg * Math.PI / 180.0,
+                mountRadius: lc.MountRadiusMm / 1000.0,
+                coxaLength: lc.CoxaLengthMm / 1000.0,
+                femurLength: lc.FemurLengthMm / 1000.0,
+                tibiaLength: lc.TibiaLengthMm / 1000.0,
+                coxaLimits: (limits.CoxaMinDeg * Math.PI / 180, limits.CoxaMaxDeg * Math.PI / 180),
+                femurLimits: (limits.FemurMinDeg * Math.PI / 180, limits.FemurMaxDeg * Math.PI / 180),
+                tibiaLimits: (limits.TibiaMinDeg * Math.PI / 180, limits.TibiaMaxDeg * Math.PI / 180)));
+        }
+
+        Legs = legs.AsReadOnly();
+        BodyPosition = Vector3.Zero;
+        BodyRotation = Vector3.Zero;
+    }
+
+    /// <summary>
+    /// Legacy constructor: creates a regular hexagonal body with uniform segment lengths.
+    /// </summary>
     public HexapodBody(
         double coxaLength,
         double femurLength,

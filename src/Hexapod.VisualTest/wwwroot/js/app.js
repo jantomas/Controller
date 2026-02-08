@@ -26,12 +26,12 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x0a0a1a, 0.0006);
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 5000);
-camera.position.set(350, 300, 400);
+camera.position.set(350, 250, 350);
 
 const orbitControls = new OrbitControls(camera, renderer.domElement);
 orbitControls.enableDamping = true;
 orbitControls.dampingFactor = 0.08;
-orbitControls.target.set(0, -20, 0);
+orbitControls.target.set(0, -60, 0);  // midway between body (Y=0) and feet (Y≈-135)
 
 // ── Lights ─────────────────────────────────────────────────────────────
 scene.add(new THREE.AmbientLight(0x667788, 1.0));
@@ -51,14 +51,18 @@ scene.add(fillLight);
 scene.add(new THREE.HemisphereLight(0x88aaff, 0x443322, 0.4));
 
 // ── Ground ─────────────────────────────────────────────────────────────
-scene.add(new THREE.GridHelper(600, 30, 0x334455, 0x1a2233));
+// Place ground grid at approximate foot level (robot Z ≈ -135mm → Three.js Y ≈ -135)
+const gridY = -140;
+const grid = new THREE.GridHelper(600, 30, 0x334455, 0x1a2233);
+grid.position.y = gridY;
+scene.add(grid);
 
 const groundMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(800, 800),
     new THREE.ShadowMaterial({ opacity: 0.15 })
 );
 groundMesh.rotation.x = -Math.PI / 2;
-groundMesh.position.y = -0.5;
+groundMesh.position.y = gridY - 0.5;
 groundMesh.receiveShadow = true;
 scene.add(groundMesh);
 
@@ -117,15 +121,18 @@ function buildScene(cfg) {
     config = cfg;
     legConfigs = cfg.Legs;
 
-    const br = cfg.Body.RadiusMm;
     const bt = cfg.Body.ThicknessMm;
 
     // — Body hexagonal plate —
-    // The hexagon shape is defined by the 6 leg mount points at BodyRadius
+    // Each vertex uses per-leg MountRadiusMm for irregular hexagon support.
+    // Shape local X = robot X, Shape local Y = -robot Y  (negated to match R() mapping
+    // which maps robot Y to Three.js -Z; after rotation.x=-π/2, shape Y → Three.js +Z
+    // so we negate to get shape Y → Three.js -Z = R()'s convention).
     const shape = new THREE.Shape();
     for (let i = 0; i < 6; i++) {
         const a = legConfigs[i].MountAngleDeg * Math.PI / 180;
-        const px = br * Math.cos(a), py = br * Math.sin(a);
+        const r = legConfigs[i].MountRadiusMm;
+        const px = r * Math.cos(a), py = -r * Math.sin(a);  // negate Y for R() alignment
         i === 0 ? shape.moveTo(px, py) : shape.lineTo(px, py);
     }
     shape.closePath();
@@ -134,16 +141,17 @@ function buildScene(cfg) {
         depth: bt, bevelEnabled: true, bevelThickness: 1.5, bevelSize: 1.5, bevelSegments: 3
     });
     bodyMesh = new THREE.Mesh(bodyGeom, M.body);
-    // ExtrudeGeometry builds XY and extrudes along Z.
-    // Rotate so robot XY plane becomes Three.js XZ (horizontal), robot Z → Three.js Y (up)
+    // ExtrudeGeometry builds in local XY and extrudes along local +Z.
+    // rotation.x = -π/2 maps: local X→Three X, local Y→Three +Z, local Z→Three -Y.
+    // So extrusion (local +Z) goes downward (Three -Y). Body top surface is at Y=0.
     bodyMesh.rotation.x = -Math.PI / 2;
-    bodyMesh.position.y = -bt / 2;
+    // No Y offset needed — top surface sits at Y=0, bottom at Y=-bt.
     bodyMesh.castShadow = true;
     bodyMesh.receiveShadow = true;
     scene.add(bodyMesh);
 
-    // "BODY" label at center
-    makeTextSprite('BODY', R(0, 0, bt + 5), '#8899aa', 28, 14);
+    // "BODY" label slightly above body top surface (Y=0 in Three.js = Z=0 in robot)
+    makeTextSprite('BODY', R(0, 0, 5), '#8899aa', 28, 14);
 
     // — Mount point markers + leg name labels —
     const mountR = cfg.Rendering.JointDiameterMm / 2;
@@ -152,7 +160,8 @@ function buildScene(cfg) {
     for (let li = 0; li < legConfigs.length; li++) {
         const leg = legConfigs[li];
         const a = leg.MountAngleDeg * Math.PI / 180;
-        const mx = br * Math.cos(a), my = br * Math.sin(a);
+        const r = leg.MountRadiusMm;
+        const mx = r * Math.cos(a), my = r * Math.sin(a);
         const m = new THREE.Mesh(mountGeom, M.mount.clone());
         m.position.copy(R(mx, my, 0));
         m.castShadow = true;
@@ -160,7 +169,7 @@ function buildScene(cfg) {
         mountMeshes.push(m);
 
         // Leg name label offset outward from mount
-        const labelDist = br + 25;
+        const labelDist = r + 25;
         makeTextSprite(
             leg.Name.replace('Front', 'F').replace('Middle', 'M').replace('Rear', 'R').replace('Right', 'R').replace('Left', 'L'),
             R(labelDist * Math.cos(a), labelDist * Math.sin(a), 15),
@@ -435,8 +444,8 @@ function updateTargetSphere() {
 }
 
 window.resetView = function () {
-    camera.position.set(350, 300, 400);
-    orbitControls.target.set(0, -20, 0);
+    camera.position.set(350, 250, 350);
+    orbitControls.target.set(0, -60, 0);
     orbitControls.update();
 };
 
@@ -524,7 +533,7 @@ window.addEventListener('resize', () => {
 
         document.getElementById('status').className = 'status-ok';
         document.getElementById('status').textContent =
-            `Body: ⌀${cfg.Body.RadiusMm * 2}mm  h=${cfg.Body.ThicknessMm}mm\n` +
+            `Body: h=${cfg.Body.ThicknessMm}mm\n` +
             `Coxa: ${lim.CoxaLengthMm}mm  Femur: ${lim.FemurLengthMm}mm  Tibia: ${lim.TibiaLengthMm}mm`;
     } catch (e) {
         document.getElementById('status').className = 'status-error';

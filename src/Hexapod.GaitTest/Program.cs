@@ -11,11 +11,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Spectre.Console;
 
-// Build configuration from appsettings files
+// Build configuration from shared hexapod.json + project-specific appsettings
+var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("hexapod.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"hexapod.{environment}.json", optional: true, reloadOnChange: false)
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development"}.json", optional: true, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false)
     .AddEnvironmentVariables()
     .Build();
 
@@ -28,15 +31,12 @@ var serviceProvider = services.BuildServiceProvider();
 var config = serviceProvider.GetRequiredService<IOptions<HexapodConfiguration>>();
 var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
-// Read kinematics configuration (values in appsettings are in millimeters, convert to meters)
-var kinematicsSection = configuration.GetSection("Hexapod:Kinematics");
-var coxaLength = kinematicsSection.GetValue<double>("CoxaLength", 40.0) / 1000.0;
-var femurLength = kinematicsSection.GetValue<double>("FemurLength", 60.0) / 1000.0;
-var tibiaLength = kinematicsSection.GetValue<double>("TibiaLength", 135.0) / 1000.0;
-var bodyRadius = kinematicsSection.GetValue<double>("BodyRadius", 90.0) / 1000.0;
+// Read kinematics configuration (strongly-typed, per-leg config)
+var kinConfig = new KinematicsConfiguration();
+configuration.GetSection(KinematicsConfiguration.SectionName).Bind(kinConfig);
 
-// Create hexapod body model
-var body = new HexapodBody(coxaLength, femurLength, tibiaLength, bodyRadius);
+// Create hexapod body model from per-leg config
+var body = new HexapodBody(kinConfig);
 
 // Try to create servo controller
 PololuMaestroServoController? controller = null;
@@ -60,8 +60,8 @@ AnsiConsole.Write(
         .Color(Color.Green));
 
 AnsiConsole.MarkupLine("[grey]Hexapod Inverse Kinematics & Gait Pattern Test Utility[/]");
-AnsiConsole.MarkupLine($"[grey]Leg dimensions: Coxa={coxaLength * 1000:F1}mm, Femur={femurLength * 1000:F1}mm, Tibia={tibiaLength * 1000:F1}mm, Body Radius={bodyRadius * 1000:F1}mm[/]");
-AnsiConsole.MarkupLine($"[grey]Configuration loaded from appsettings.json[/]");
+AnsiConsole.MarkupLine($"[grey]Leg dimensions (leg 0): Coxa={kinConfig.Legs[0].CoxaLengthMm:F1}mm, Femur={kinConfig.Legs[0].FemurLengthMm:F1}mm, Tibia={kinConfig.Legs[0].TibiaLengthMm:F1}mm, Mount radius={kinConfig.Legs[0].MountRadiusMm:F1}mm[/]");
+AnsiConsole.MarkupLine($"[grey]Configuration loaded from hexapod.json[/]");
 AnsiConsole.MarkupLine(tester.HasHardware 
     ? "[green]Hardware controller connected - physical execution available[/]\n" 
     : "[yellow]Simulation mode - no hardware connected[/]\n");

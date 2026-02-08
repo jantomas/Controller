@@ -38,6 +38,8 @@ try
     builder.Configuration.Sources.Clear();
     builder.Configuration
         .SetBasePath(AppContext.BaseDirectory)
+        .AddJsonFile("hexapod.json", optional: true, reloadOnChange: true)
+        .AddJsonFile($"hexapod.{environmentName}.json", optional: true, reloadOnChange: true)
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
         .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true)
         .AddEnvironmentVariables("HEXAPOD_")

@@ -13,4 +13,13 @@
     <ProjectReference Include="..\Hexapod.Movement\Hexapod.Movement.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\config\hexapod.json" Link="hexapod.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\config\hexapod.*.json" Link="%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

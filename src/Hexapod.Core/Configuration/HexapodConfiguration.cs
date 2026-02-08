@@ -23,6 +23,16 @@ public class HexapodConfiguration
     public HardwareConfiguration Hardware { get; set; } = new();
 
     /// <summary>
+    /// Kinematics configuration: body shape, leg mount points, segment dimensions.
+    /// </summary>
+    public KinematicsConfiguration Kinematics { get; set; } = new();
+
+    /// <summary>
+    /// Rendering configuration for 3D visualization.
+    /// </summary>
+    public RenderingConfiguration Rendering { get; set; } = new();
+
+    /// <summary>
     /// Movement system configuration.
     /// </summary>
     public MovementConfiguration Movement { get; set; } = new();
