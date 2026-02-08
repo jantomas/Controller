@@ -42,6 +42,21 @@
       "env": {
         "DOTNET_ENVIRONMENT": "Development"
       }
+    },
+    {
+      "name": ".NET Core Launch (VisualTest)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build VisualTest",
+      "program": "${workspaceFolder}/src/Hexapod.VisualTest/bin/Debug/net8.0/Hexapod.VisualTest.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Hexapod.VisualTest",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "env": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5180"
+      }
     }
   ]
 }

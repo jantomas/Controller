@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Hexapod.VisualTest</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hexapod.Core\Hexapod.Core.csproj" />
+    <ProjectReference Include="..\Hexapod.Movement\Hexapod.Movement.csproj" />
+  </ItemGroup>
+
+</Project>
