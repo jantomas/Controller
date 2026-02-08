@@ -14,7 +14,7 @@ using Spectre.Console;
 // Build configuration from shared hexapod.json + project-specific appsettings
 var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
 var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
+    .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("hexapod.json", optional: false, reloadOnChange: false)
     .AddJsonFile($"hexapod.{environment}.json", optional: true, reloadOnChange: false)
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)

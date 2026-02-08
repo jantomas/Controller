@@ -27,16 +27,9 @@ public class KinematicsConfiguration
     /// Per-leg configuration (mount angle, mount radius, segment lengths).
     /// Exactly 6 entries, ordered: FrontRight, MiddleRight, RearRight, RearLeft, MiddleLeft, FrontLeft.
     /// Each leg can have a different mount radius, allowing irregular (elongated) hexagonal body shapes.
+    /// Defaults are defined in config/hexapod.json.
     /// </summary>
-    public List<LegConfiguration> Legs { get; set; } = new()
-    {
-        new() { Name = "FrontRight",  MountAngleDeg = -30,  MountRadiusMm = 90 },
-        new() { Name = "MiddleRight", MountAngleDeg = -90,  MountRadiusMm = 90 },
-        new() { Name = "RearRight",   MountAngleDeg = -150, MountRadiusMm = 90 },
-        new() { Name = "RearLeft",    MountAngleDeg = 150,  MountRadiusMm = 90 },
-        new() { Name = "MiddleLeft",  MountAngleDeg = 90,   MountRadiusMm = 90 },
-        new() { Name = "FrontLeft",   MountAngleDeg = 30,   MountRadiusMm = 90 },
-    };
+    public List<LegConfiguration> Legs { get; set; } = new();
 
     /// <summary>
     /// Global joint limits (applied to all legs unless overridden per-leg).

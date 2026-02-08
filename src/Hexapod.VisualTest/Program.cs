@@ -6,8 +6,10 @@ using Hexapod.Movement.Kinematics;
 var builder = WebApplication.CreateBuilder(args);
 
 // Load shared hexapod.json + optional environment override before project-specific appsettings
-builder.Configuration.AddJsonFile("hexapod.json", optional: false, reloadOnChange: false);
-builder.Configuration.AddJsonFile($"hexapod.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
+// Use AppContext.BaseDirectory so files are found in the output directory (where .csproj copies them)
+var binDir = AppContext.BaseDirectory;
+builder.Configuration.AddJsonFile(Path.Combine(binDir, "hexapod.json"), optional: false, reloadOnChange: false);
+builder.Configuration.AddJsonFile(Path.Combine(binDir, $"hexapod.{builder.Environment.EnvironmentName}.json"), optional: true, reloadOnChange: false);
 
 builder.Services.AddCors();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
