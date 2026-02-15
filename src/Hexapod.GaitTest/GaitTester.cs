@@ -450,12 +450,24 @@ public class GaitTester
             new TextPrompt<int>("Number of cycles [grey](default 2)[/]:")
                 .DefaultValue(2));
 
+        var stepLength = AnsiConsole.Prompt(
+            new TextPrompt<double>("Step length (mm) [grey](default 60)[/]:")
+                .DefaultValue(60.0)) / 1000.0;
+
+        var stepHeight = AnsiConsole.Prompt(
+            new TextPrompt<double>("Step height (mm) [grey](default 30)[/]:")
+                .DefaultValue(30.0)) / 1000.0;
+
         var stepsPerCycle = 24;
         var totalSteps = cycles * stepsPerCycle;
 
-        AnsiConsole.Write(new Rule("[yellow]Gait Animation[/]"));
+        // Capture each leg's standing (neutral) position as the base for gait offsets
+        _body.InitializeToStandingPosition();
+        var neutralPositions = new Vector3[6];
+        for (int i = 0; i < 6; i++)
+            neutralPositions[i] = _body.Legs[i].GetFootPosition();
 
-        // Legend
+        AnsiConsole.Write(new Rule("[yellow]Gait Animation[/]"));
         AnsiConsole.MarkupLine("[grey]Legend: [green]█[/]=Ground [red]▀[/]=Air[/]\n");
 
         for (int step = 0; step < totalSteps; step++)
@@ -474,10 +486,65 @@ public class GaitTester
             }
 
             AnsiConsole.MarkupLine(visual.ToString());
-            Thread.Sleep(100);
+
+            // Compute foot positions from neutral + gait offsets and send to hardware
+            for (int i = 0; i < 6; i++)
+            {
+                var lp = legPhases[i];
+                var leg = _body.Legs[i];
+                var neutral = neutralPositions[i];
+
+                // Calculate movement offset along the leg's outward direction (forward walk)
+                var legAngle = leg.MountAngle;
+                double offsetX = 0, offsetY = 0, offsetZ = 0;
+
+                if (lp.IsSwingPhase)
+                {
+                    // Swing: move from rear to front in air
+                    var swing = lp.SwingProgress;
+                    var movementPhase = Math.Cos(Math.PI * (1 - swing)); // -1 to 1
+                    offsetX = stepLength * 0.5 * movementPhase * Math.Cos(legAngle);
+                    offsetY = stepLength * 0.5 * movementPhase * Math.Sin(legAngle);
+                    offsetZ = stepHeight * 4 * swing * (1 - swing); // parabolic arc
+                }
+                else
+                {
+                    // Stance: push from front to rear on ground
+                    var stanceProgress = lp.Phase / gait.DutyFactor;
+                    var pushPhase = 2 * stanceProgress - 1; // -1 to 1
+                    offsetX = -stepLength * 0.5 * pushPhase * Math.Cos(legAngle);
+                    offsetY = -stepLength * 0.5 * pushPhase * Math.Sin(legAngle);
+                }
+
+                var target = new Vector3(
+                    neutral.X + (float)offsetX,
+                    neutral.Y + (float)offsetY,
+                    neutral.Z + (float)offsetZ);
+
+                var angles = leg.InverseKinematics(target);
+                if (angles.HasValue)
+                {
+                    leg.SetJointAngles(angles.Value.Coxa, angles.Value.Femur, angles.Value.Tibia);
+                    ExecuteJointAngles(i, angles.Value.Coxa, angles.Value.Femur, angles.Value.Tibia);
+                }
+            }
+
+            Thread.Sleep(HardwareEnabled ? 80 : 100);
         }
 
         AnsiConsole.MarkupLine($"\n[green]✓[/] Completed {cycles} cycle(s) of {gaitType} gait");
+
+        // Return to standing pose after gait
+        if (HardwareEnabled)
+        {
+            _body.InitializeToStandingPosition();
+            for (int i = 0; i < 6; i++)
+            {
+                var leg = _body.Legs[i];
+                ExecuteJointAngles(i, leg.CoxaAngle, leg.FemurAngle, leg.TibiaAngle);
+            }
+            AnsiConsole.MarkupLine("[green]✓[/] Returned to standing pose");
+        }
 
         // Show detailed phase information
         if (AnsiConsole.Confirm("\nShow detailed phase table?", false))

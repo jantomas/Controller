@@ -23,7 +23,7 @@
     },
 
     "Kinematics": {
-      "DefaultHeight": 156.0,
+      "DefaultHeight": 206.0,
       "MaxReachRadius": 250.0,
 
       "Body": {
