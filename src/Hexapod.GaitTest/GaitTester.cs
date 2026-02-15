@@ -69,6 +69,120 @@ public class GaitTester
     }
 
     /// <summary>
+    /// Move all legs to the computed standing pose using IK.
+    /// Works regardless of current servo positions.
+    /// </summary>
+    public void GoToStandingPose()
+    {
+        // Re-compute standing joint angles from body geometry
+        _body.InitializeToStandingPosition();
+
+        AnsiConsole.MarkupLine($"[grey]Standing height: {_body.DefaultHeight * 1000:F0}mm[/]");
+
+        var table = new Table()
+            .Border(TableBorder.Rounded)
+            .Title("[bold]Standing Pose[/]")
+            .AddColumn("Leg")
+            .AddColumn("Foot Position (mm)")
+            .AddColumn("Joint Angles (°)");
+
+        for (int i = 0; i < 6; i++)
+        {
+            var leg = _body.Legs[i];
+            var pos = leg.GetFootPosition();
+            table.AddRow(
+                LegNames[i],
+                $"X:{pos.X * 1000:F1}  Y:{pos.Y * 1000:F1}  Z:{pos.Z * 1000:F1}",
+                $"C:{ToDegrees(leg.CoxaAngle):F1}  F:{ToDegrees(leg.FemurAngle):F1}  T:{ToDegrees(leg.TibiaAngle):F1}");
+        }
+
+        AnsiConsole.Write(table);
+
+        // Send to hardware if enabled
+        if (HardwareEnabled && _controller != null)
+        {
+            AnsiConsole.Status()
+                .Spinner(Spinner.Known.Dots)
+                .Start("Moving to standing pose...", ctx =>
+                {
+                    for (int i = 0; i < 6; i++)
+                    {
+                        var leg = _body.Legs[i];
+                        ExecuteJointAngles(i, leg.CoxaAngle, leg.FemurAngle, leg.TibiaAngle);
+                    }
+                    Thread.Sleep(500); // Allow servos to reach position
+                });
+            AnsiConsole.MarkupLine("[green]\u2713[/] Servos moved to standing pose");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[grey]Simulation only \u2014 enable hardware to move servos[/]");
+        }
+    }
+
+    /// <summary>
+    /// Move a single leg to a specific X, Y, Z target position.
+    /// </summary>
+    public void MoveToTarget()
+    {
+        var legChoice = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select leg to move:")
+                .AddChoices(LegNames.Select((name, i) => $"{i}: {name}")));
+
+        var legId = int.Parse(legChoice.Split(':')[0]);
+        var leg = _body.Legs[legId];
+        var currentPos = leg.GetFootPosition();
+
+        AnsiConsole.MarkupLine($"\n[bold cyan]Move {LegNames[legId]} to target[/]");
+        AnsiConsole.MarkupLine($"[grey]Current position: X={currentPos.X * 1000:F1}mm  Y={currentPos.Y * 1000:F1}mm  Z={currentPos.Z * 1000:F1}mm[/]");
+
+        var x = AnsiConsole.Prompt(
+            new TextPrompt<double>($"Target X (mm) [grey](default {currentPos.X * 1000:F1})[/]:")
+                .DefaultValue(Math.Round(currentPos.X * 1000, 1))) / 1000.0;
+
+        var y = AnsiConsole.Prompt(
+            new TextPrompt<double>($"Target Y (mm) [grey](default {currentPos.Y * 1000:F1})[/]:")
+                .DefaultValue(Math.Round(currentPos.Y * 1000, 1))) / 1000.0;
+
+        var z = AnsiConsole.Prompt(
+            new TextPrompt<double>($"Target Z (mm) [grey](default {currentPos.Z * 1000:F1})[/]:")
+                .DefaultValue(Math.Round(currentPos.Z * 1000, 1))) / 1000.0;
+
+        var target = new Vector3((float)x, (float)y, (float)z);
+        var angles = leg.InverseKinematics(target);
+
+        if (angles.HasValue)
+        {
+            leg.SetJointAngles(angles.Value.Coxa, angles.Value.Femur, angles.Value.Tibia);
+            var actualPos = leg.GetFootPosition();
+
+            var table = new Table()
+                .Border(TableBorder.Rounded)
+                .AddColumn("")
+                .AddColumn("X (mm)")
+                .AddColumn("Y (mm)")
+                .AddColumn("Z (mm)");
+
+            table.AddRow("Target",
+                $"{target.X * 1000:F1}", $"{target.Y * 1000:F1}", $"{target.Z * 1000:F1}");
+            table.AddRow("Actual (FK)",
+                $"{actualPos.X * 1000:F1}", $"{actualPos.Y * 1000:F1}", $"{actualPos.Z * 1000:F1}");
+
+            AnsiConsole.Write(table);
+            AnsiConsole.MarkupLine($"Joint angles: C:{ToDegrees(angles.Value.Coxa):F1}\u00b0  F:{ToDegrees(angles.Value.Femur):F1}\u00b0  T:{ToDegrees(angles.Value.Tibia):F1}\u00b0");
+
+            ExecuteJointAngles(legId, angles.Value.Coxa, angles.Value.Femur, angles.Value.Tibia);
+            if (HardwareEnabled)
+                AnsiConsole.MarkupLine("[green]\u2713[/] Servo command sent");
+        }
+        else
+        {
+            AnsiConsole.MarkupLine("[red]\u2717 Target unreachable[/] \u2014 position is outside leg workspace or violates joint limits");
+        }
+    }
+
+    /// <summary>
     /// Center all servos to home position.
     /// </summary>
     public void CenterAllServos()

@@ -85,6 +85,8 @@ while (true)
         "📐 Show leg workspace",
         "📋 Show leg configuration",
         "🔧 Interactive foot position",
+        "🧍 Standing pose",
+        "🎯 Move leg to target",
     };
     
     // Add hardware-specific options
@@ -146,6 +148,12 @@ while (true)
             break;
         case "🔧 Interactive foot position":
             tester.InteractiveFootPosition();
+            break;
+        case "🧍 Standing pose":
+            tester.GoToStandingPose();
+            break;
+        case "🎯 Move leg to target":
+            tester.MoveToTarget();
             break;
         case var s when s.StartsWith("🔌 Toggle hardware mode"):
             tester.ToggleHardwareMode();
