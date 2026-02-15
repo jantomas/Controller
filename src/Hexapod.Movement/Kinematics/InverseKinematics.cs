@@ -183,6 +183,11 @@ public class HexapodBody
     public IReadOnlyList<HexapodLeg> Legs { get; }
     
     /// <summary>
+    /// Default standing height above ground in meters.
+    /// </summary>
+    public double DefaultHeight { get; }
+
+    /// <summary>
     /// Body position offset (translation).
     /// </summary>
     public Vector3 BodyPosition { get; private set; }
@@ -198,6 +203,7 @@ public class HexapodBody
     /// </summary>
     public HexapodBody(KinematicsConfiguration config)
     {
+        DefaultHeight = config.DefaultHeight / 1000.0; // mm to meters
         var limits = config.JointLimits;
         var legs = new List<HexapodLeg>();
 
@@ -220,6 +226,9 @@ public class HexapodBody
         Legs = legs.AsReadOnly();
         BodyPosition = Vector3.Zero;
         BodyRotation = Vector3.Zero;
+
+        // Initialize all legs to standing position
+        InitializeToStandingPosition();
     }
 
     /// <summary>
@@ -229,8 +238,11 @@ public class HexapodBody
         double coxaLength,
         double femurLength,
         double tibiaLength,
-        double bodyRadius = 0.08)
+        double bodyRadius = 0.08,
+        double defaultHeight = 0.08)
     {
+        DefaultHeight = defaultHeight;
+
         // Create 6 legs in hexagonal arrangement
         var legs = new List<HexapodLeg>();
         var legNames = new[] { "FrontRight", "MiddleRight", "RearRight", 
@@ -252,6 +264,34 @@ public class HexapodBody
         Legs = legs.AsReadOnly();
         BodyPosition = Vector3.Zero;
         BodyRotation = Vector3.Zero;
+
+        // Initialize all legs to standing position
+        InitializeToStandingPosition();
+    }
+
+    /// <summary>
+    /// Initializes all legs to a neutral standing position.
+    /// Each foot is placed straight out from its mount point at DefaultHeight below the body.
+    /// </summary>
+    public void InitializeToStandingPosition()
+    {
+        foreach (var leg in Legs)
+        {
+            // Neutral foot target: coxa straight out (0° coxa), at ground level
+            var reach = leg.CoxaLength + leg.FemurLength; // horizontal reach when standing
+            var footX = leg.MountRadius * Math.Cos(leg.MountAngle)
+                      + reach * Math.Cos(leg.MountAngle);
+            var footY = leg.MountRadius * Math.Sin(leg.MountAngle)
+                      + reach * Math.Sin(leg.MountAngle);
+            var footZ = -DefaultHeight;
+
+            var target = new Vector3((float)footX, (float)footY, (float)footZ);
+            var angles = leg.InverseKinematics(target);
+            if (angles.HasValue)
+            {
+                leg.SetJointAngles(angles.Value.Coxa, angles.Value.Femur, angles.Value.Tibia);
+            }
+        }
     }
 
     /// <summary>

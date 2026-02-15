@@ -23,20 +23,20 @@
     },
 
     "Kinematics": {
-      "DefaultHeight": 45.0,
-      "MaxReachRadius": 200.0,
+      "DefaultHeight": 156.0,
+      "MaxReachRadius": 250.0,
 
       "Body": {
-        "ThicknessMm": 12.0,
+        "ThicknessMm": 45.0,
         "Description": "Irregular hexagonal body. Each vertex is defined by its mount angle and distance from center. The shape can be elongated or asymmetric while remaining hexagonal."
       },
 
       "Legs": [
         {
           "Name": "FrontRight",
-          "MountAngleDeg": -30.0,
-          "MountRadiusMm": 90.0,
-          "CoxaLengthMm": 40.0,
+          "MountAngleDeg": -35.0,
+          "MountRadiusMm": 135.0,
+          "CoxaLengthMm": 50.0,
           "FemurLengthMm": 60.0,
           "TibiaLengthMm": 135.0
         },
@@ -44,23 +44,23 @@
           "Name": "MiddleRight",
           "MountAngleDeg": -90.0,
           "MountRadiusMm": 90.0,
-          "CoxaLengthMm": 40.0,
+          "CoxaLengthMm": 50.0,
           "FemurLengthMm": 60.0,
           "TibiaLengthMm": 135.0
         },
         {
           "Name": "RearRight",
-          "MountAngleDeg": -150.0,
-          "MountRadiusMm": 90.0,
-          "CoxaLengthMm": 40.0,
+          "MountAngleDeg": -145.0,
+          "MountRadiusMm": 135.0,
+          "CoxaLengthMm": 50.0,
           "FemurLengthMm": 60.0,
           "TibiaLengthMm": 135.0
         },
         {
           "Name": "RearLeft",
-          "MountAngleDeg": 150.0,
-          "MountRadiusMm": 90.0,
-          "CoxaLengthMm": 40.0,
+          "MountAngleDeg": 145.0,
+          "MountRadiusMm": 135.0,
+          "CoxaLengthMm": 50.0,
           "FemurLengthMm": 60.0,
           "TibiaLengthMm": 135.0
         },
@@ -68,15 +68,15 @@
           "Name": "MiddleLeft",
           "MountAngleDeg": 90.0,
           "MountRadiusMm": 90.0,
-          "CoxaLengthMm": 40.0,
+          "CoxaLengthMm": 50.0,
           "FemurLengthMm": 60.0,
           "TibiaLengthMm": 135.0
         },
         {
           "Name": "FrontLeft",
-          "MountAngleDeg": 30.0,
-          "MountRadiusMm": 90.0,
-          "CoxaLengthMm": 40.0,
+          "MountAngleDeg": 35.0,
+          "MountRadiusMm": 135.0,
+          "CoxaLengthMm": 50.0,
           "FemurLengthMm": 60.0,
           "TibiaLengthMm": 135.0
         }
@@ -93,9 +93,9 @@
     },
 
     "Rendering": {
-      "CoxaDiameterMm": 10.0,
-      "FemurDiameterMm": 8.0,
-      "TibiaDiameterMm": 6.0,
+      "CoxaDiameterMm": 55.0,
+      "FemurDiameterMm": 55.0,
+      "TibiaDiameterMm": 55.0,
       "JointDiameterMm": 12.0,
       "FootDiameterMm": 8.0
     }

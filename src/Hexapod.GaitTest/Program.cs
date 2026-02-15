@@ -51,7 +51,7 @@ catch (Exception ex)
     AnsiConsole.MarkupLine("[grey]Running in simulation mode[/]");
 }
 
-var tester = new GaitTester(body, controller);
+var tester = new GaitTester(body, controller, config.Value.Hardware.MaestroServo.ChannelMapping);
 
 // Welcome banner
 AnsiConsole.Write(

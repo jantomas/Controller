@@ -16,6 +16,7 @@ public class GaitTester
 {
     private readonly HexapodBody _body;
     private readonly PololuMaestroServoController? _controller;
+    private readonly int[] _channelMap;
     private bool _hardwareEnabled;
 
     private static readonly string[] LegNames = 
@@ -27,12 +28,12 @@ public class GaitTester
     // Default parameters
     private const double DefaultStepLength = 0.06;  // 60mm
     private const double DefaultStepHeight = 0.03;  // 30mm
-    private const double DefaultBodyHeight = 0.08;  // 80mm
 
-    public GaitTester(HexapodBody body, PololuMaestroServoController? controller = null)
+    public GaitTester(HexapodBody body, PololuMaestroServoController? controller = null, int[]? channelMapping = null)
     {
         _body = body;
         _controller = controller;
+        _channelMap = channelMapping ?? Enumerable.Range(0, 18).ToArray();
         _hardwareEnabled = false;
     }
 
@@ -121,11 +122,10 @@ public class GaitTester
         if (!HardwareEnabled || _controller == null)
             return;
 
-        // Calculate PWM values and send to controller
-        // Channel mapping: legId * 3 + jointIndex
-        var coxaChannel = legId * 3 + 0;
-        var femurChannel = legId * 3 + 1;
-        var tibiaChannel = legId * 3 + 2;
+        // Map logical leg/joint indices to physical servo channels
+        var coxaChannel = _channelMap[legId * 3 + 0];
+        var femurChannel = _channelMap[legId * 3 + 1];
+        var tibiaChannel = _channelMap[legId * 3 + 2];
 
         // Convert radians to PWM microseconds
         // Assuming center = 1500us, range = 500-2500us for -90 to +90 degrees
